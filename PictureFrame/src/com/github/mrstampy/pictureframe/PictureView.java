@@ -9,6 +9,7 @@ import java.util.TimerTask;
 import javafx.animation.FadeTransition;
 import javafx.animation.FillTransition;
 import javafx.animation.Interpolator;
+import javafx.animation.ParallelTransition;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -28,302 +29,294 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class PictureView {
-  private static final Logger log = LoggerFactory.getLogger(PictureView.class);
+	private static final Logger log = LoggerFactory.getLogger(PictureView.class);
 
-  private Timer timer;
+	private Timer timer;
 
-  private PictureScanner scanner = new PictureScanner();
+	private PictureScanner scanner = new PictureScanner();
 
-  private ImageView view1 = new ImageView();
-  private ImageView view2 = new ImageView();
-  private Rectangle r;
+	private ImageView view1 = new ImageView();
+	private ImageView view2 = new ImageView();
+	private Rectangle r;
 
-  private FadeTransition fade1 = new FadeTransition();
-  private FadeTransition fade2 = new FadeTransition();
-  
-  private FadeTransition fromFade;
-  private FadeTransition toFade;
+	private FadeTransition fade1 = new FadeTransition();
+	private FadeTransition fade2 = new FadeTransition();
 
-  private FillTransition fillTransition;
+	private ParallelTransition pt = new ParallelTransition(fade1, fade2);
 
-  private StackPane stackPane = new StackPane(view2, view1);
+	private FillTransition fillTransition;
 
-  private long duration = 3;
-  private long transition = 3;
+	private StackPane stackPane = new StackPane(view2, view1);
 
-  private Random rand = new Random(System.nanoTime());
+	private long duration = 3;
+	private long transition = 3;
 
-  private VBox vbox = new VBox(stackPane);
+	private Random rand = new Random(System.nanoTime());
 
-  private volatile boolean running;
+	private VBox vbox = new VBox(stackPane);
 
-  public PictureView() {
-    init();
-  }
+	private volatile boolean running;
 
-  public void setDirectory(File directory) {
-    scanner.setDirectory(directory);
-  }
+	public PictureView() {
+		init();
+	}
 
-  public void start() {
-    log.debug("start");
-    running = true;
-    
-    scanner.scan();
+	public void setDirectory(File directory) {
+		scanner.setDirectory(directory);
+	}
 
-    startImpl();
-  }
+	public void start() {
+		log.debug("start");
+		running = true;
 
-  private void startImpl() {
-    log.debug("startImpl");
-    Platform.runLater(new Runnable() {
+		scanner.scan();
 
-      @Override
-      public void run() {
-        transition();
-        transitionBackground();
-      }
-    });
-  }
+		startImpl();
+	}
 
-  private void schedule() {
-    log.debug("Scheduling switch");
-    if (timer == null) timer = new Timer("PictureFrame image switch timer", true);
+	private void startImpl() {
+		log.debug("startImpl");
+		Platform.runLater(new Runnable() {
 
-    timer.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				transition();
+				transitionBackground();
+			}
+		});
+	}
 
-      @Override
-      public void run() {
-        if(running) switchImages();
-      }
-    }, getDuration() * 1000);
-  }
+	private void schedule() {
+		log.debug("Scheduling switch");
+		if (timer == null) timer = new Timer("PictureFrame image switch timer", true);
 
-  private void switchImages() {
-    Platform.runLater(new Runnable() {
+		timer.schedule(new TimerTask() {
 
-      @Override
-      public void run() {
-        transition();
-      }
-    });
-  }
+			@Override
+			public void run() {
+				if (running) switchImages();
+			}
+		}, getDuration() * 1000);
+	}
 
-  public void stop() {
-    log.debug("stop");
-    running = false;
-    if (timer != null) {
-      timer.cancel();
-      timer = null;
-    }
+	private void switchImages() {
+		Platform.runLater(new Runnable() {
 
-    stopAnimations();
-    reset();
-  }
+			@Override
+			public void run() {
+				transition();
+			}
+		});
+	}
 
-  private void reset() {
-    fillTransition.setToValue(Color.WHITE);
-    fillTransition.playFromStart();
-  }
+	public void stop() {
+		log.debug("stop");
+		running = false;
+		if (timer != null) {
+			timer.cancel();
+			timer = null;
+		}
 
-  private void stopAnimations() {
-    fillTransition.stop();
-  }
+		stopAnimations();
+		reset();
+	}
 
-  public long getDuration() {
-    return duration;
-  }
+	private void reset() {
+		fillTransition.setToValue(Color.WHITE);
+		fillTransition.playFromStart();
+	}
 
-  public void setDuration(long duration) {
-    this.duration = duration;
-  }
+	private void stopAnimations() {
+		fillTransition.stop();
+	}
 
-  public long getTransition() {
-    return transition;
-  }
+	public long getDuration() {
+		return duration;
+	}
 
-  public void setTransition(long transition) {
-    this.transition = transition;
-  }
+	public void setDuration(long duration) {
+		this.duration = duration;
+	}
 
-  public Parent getView() {
-    return vbox;
-  }
+	public long getTransition() {
+		return transition;
+	}
 
-  private void transition() {
-    setFadeDirection();
-    
-    fromFade.stop();
-    toFade.stop();
-    
-    setImage((ImageView) toFade.getNode());
+	public void setTransition(long transition) {
+		this.transition = transition;
+	}
 
-    fromFade.setDelay(Duration.seconds(getTransition()));
-    fromFade.setToValue(0.0);
-    fromFade.play();
+	public Parent getView() {
+		return vbox;
+	}
 
-    toFade.setDelay(Duration.seconds(getTransition()));
-    toFade.setToValue(1.0);
-    toFade.play();
-  }
+	private void transition() {
+		boolean isFrom1 = fade1.getNode().getOpacity() == 1 || fade1.getCurrentRate() > 0;
 
-  private void setFadeDirection() {
-    if(fromFade == null) {
-      fromFade = fade1;
-      toFade = fade2;
-    } else {
-      FadeTransition tmp = fromFade;
-      fromFade = toFade;
-      toFade = tmp;
-    }
-  }
+		log.debug("isFrom1? {}", isFrom1);
 
-  private void setImage(ImageView view) {
-    try {
-      view.setOpacity(0.0);
-      Image image = scanner.getRandomImage();
-      view.setImage(image);
-    } catch (FileNotFoundException e) {
-      log.error("Could not load random image", e);
-    }
-  }
+		log.debug("fade1: {}", fade1.getNode().getOpacity());
+		log.debug("fade2: {}", fade2.getNode().getOpacity());
 
-  private void init() {
-    view2.setOpacity(0.0);
-    view1.setPreserveRatio(true);
-    view2.setPreserveRatio(true);
+		setImage((ImageView) (isFrom1 ? fade2.getNode() : fade1.getNode()));
 
-    fade1.setNode(view1);
-    fade1.setDuration(Duration.seconds(getTransition()));
-    fade1.setInterpolator(Interpolator.LINEAR);
+		pt.stop();
 
-    fade2.setNode(view2);
-    fade2.setDuration(Duration.seconds(getTransition()));
-    fade2.setInterpolator(Interpolator.LINEAR);
-    
-    fade1.setOnFinished(new EventHandler<ActionEvent>() {
+		fade1.setFromValue(isFrom1 ? 1.0 : 0.0);
+		fade1.setToValue(isFrom1 ? 0.0 : 1.0);
 
-      @Override
-      public void handle(ActionEvent event) {
-        log.debug("schedule");
-        schedule();
-      }
-    });
+		fade2.setFromValue(isFrom1 ? 0.0 : 1.0);
+		fade2.setToValue(isFrom1 ? 1.0 : 0.0);
 
-    r = getRectangle();
-    stackPane.getChildren().add(0, r);
+		pt.play();
+	}
 
-    fillTransition = new FillTransition(Duration.seconds(3), r);
-    fillTransition.setOnFinished(new EventHandler<ActionEvent>() {
+	private void setImage(ImageView view) {
+		try {
+			Image image = scanner.getRandomImage();
+			view.setImage(image);
+			view.setOpacity(0.0);
+		} catch (FileNotFoundException e) {
+			log.error("Could not load random image", e);
+		}
+	}
 
-      @Override
-      public void handle(ActionEvent event) {
-        if (!running) return;
-        transitionBackground();
-      }
-    });
-  }
+	private void init() {
+		view2.setOpacity(0.0);
+		view1.setPreserveRatio(true);
+		view2.setPreserveRatio(true);
 
-  public void setHeight(double height) {
-    view1.setFitHeight(height);
-    view2.setFitHeight(height);
-    r.setHeight(height);
-  }
+		fade1.setNode(view1);
+		fade1.setDuration(Duration.seconds(getTransition()));
+		fade1.setInterpolator(Interpolator.LINEAR);
 
-  public void setWidth(double width) {
-    r.setWidth(width);
-  }
+		fade2.setNode(view2);
+		fade2.setDuration(Duration.seconds(getTransition()));
+		fade2.setInterpolator(Interpolator.LINEAR);
 
-  public EventHandler<MouseEvent> getMouseEventHandler() {
-    return new EventHandler<MouseEvent>() {
-      
-      private Thread singleClick;
+		fade1.setOnFinished(new EventHandler<ActionEvent>() {
 
-      @Override
-      public void handle(MouseEvent event) {
-//        log.debug("{}", event);
-        if (MouseEvent.MOUSE_PRESSED == event.getEventType()) {
-          handleMousePressed(event);
-        } else if (MouseEvent.DRAG_DETECTED == event.getEventType()) {
-          next();
-        }
-      }
+			@Override
+			public void handle(ActionEvent event) {
+				log.debug("schedule");
+				schedule();
+			}
+		});
 
-      private void handleMousePressed(MouseEvent event) {
-        if (event.getClickCount() == 2) {
-          stopThread();
-          if (running) {
-            stop();
-          } else {
-            start();
-          }
-        } else if (event.getButton() == MouseButton.SECONDARY) {
-          showDirectoryChooser();
-        } else if(event.getClickCount() == 1) {
-          startThread();
-        }
-      }
-      
-      private void startThread() {
-        stopThread();
-        singleClick = new Thread("Single click detector") {
-          public void run() {
-            try {
-              Thread.sleep(500);
-            } catch (InterruptedException e) {
-            }
-            Platform.runLater(new Runnable() {
-              
-              @Override
-              public void run() {
-                next();
-              }
-            });
-          }
-        };
-        singleClick.start();
-      }
-      
-      @SuppressWarnings("deprecation")
-      private void stopThread() {
-        if(singleClick == null || !singleClick.isAlive()) return;
-        
-        singleClick.stop();
-      }
+		r = getRectangle();
+		stackPane.getChildren().add(0, r);
 
-      private void showDirectoryChooser() {
-        DirectoryChooser chooser = new DirectoryChooser();
-        chooser.setTitle("Picture Directories");
-        chooser.setInitialDirectory(scanner.getDirectory());
+		fillTransition = new FillTransition(Duration.seconds(3), r);
+		fillTransition.setOnFinished(new EventHandler<ActionEvent>() {
 
-        File chosen = chooser.showDialog(null);
-        if (chosen != null) scanner.setDirectory(chosen);
-      }
-    };
-  }
+			@Override
+			public void handle(ActionEvent event) {
+				if (!running) return;
+				transitionBackground();
+			}
+		});
+	}
 
-  private void next() {
-    boolean b = running;
-    stop();
-    running = b;
-    if(running) {
-      startImpl();
-    } else {
-      transition();
-    }
-  }
+	public void setHeight(double height) {
+		view1.setFitHeight(height);
+		view2.setFitHeight(height);
+		r.setHeight(height);
+	}
 
-  private void transitionBackground() {
-    fillTransition.setToValue(new Color(rand.nextDouble(), rand.nextDouble(), rand.nextDouble(), rand.nextDouble()));
-    fillTransition.playFromStart();
-  }
+	public void setWidth(double width) {
+		r.setWidth(width);
+	}
 
-  private Rectangle getRectangle() {
-    Rectangle r = new Rectangle(stackPane.getWidth(), stackPane.getHeight());
+	public EventHandler<MouseEvent> getMouseEventHandler() {
+		return new EventHandler<MouseEvent>() {
 
-    r.setFill(Color.WHITE);
+			private Thread singleClick;
 
-    return r;
-  }
+			@Override
+			public void handle(MouseEvent event) {
+				// log.debug("{}", event);
+				if (MouseEvent.MOUSE_PRESSED == event.getEventType()) {
+					handleMousePressed(event);
+				} else if (MouseEvent.DRAG_DETECTED == event.getEventType()) {
+					next();
+				}
+			}
+
+			private void handleMousePressed(MouseEvent event) {
+				if (event.getClickCount() == 2) {
+					stopThread();
+					if (running) {
+						stop();
+					} else {
+						start();
+					}
+				} else if (event.getButton() == MouseButton.SECONDARY) {
+					showDirectoryChooser();
+				} else if (event.getClickCount() == 1) {
+					startThread();
+				}
+			}
+
+			private void startThread() {
+				stopThread();
+				singleClick = new Thread("Single click detector") {
+					public void run() {
+						try {
+							Thread.sleep(500);
+						} catch (InterruptedException e) {
+						}
+						Platform.runLater(new Runnable() {
+
+							@Override
+							public void run() {
+								next();
+							}
+						});
+					}
+				};
+				singleClick.start();
+			}
+
+			@SuppressWarnings("deprecation")
+			private void stopThread() {
+				if (singleClick == null || !singleClick.isAlive()) return;
+
+				singleClick.stop();
+			}
+
+			private void showDirectoryChooser() {
+				DirectoryChooser chooser = new DirectoryChooser();
+				chooser.setTitle("Picture Directories");
+				chooser.setInitialDirectory(scanner.getDirectory());
+
+				File chosen = chooser.showDialog(null);
+				if (chosen != null) scanner.setDirectory(chosen);
+			}
+		};
+	}
+
+	private void next() {
+		boolean b = running;
+		stop();
+		running = b;
+		if (running) {
+			startImpl();
+		} else {
+			transition();
+		}
+	}
+
+	private void transitionBackground() {
+		fillTransition.setToValue(new Color(rand.nextDouble(), rand.nextDouble(), rand.nextDouble(), rand.nextDouble()));
+		fillTransition.playFromStart();
+	}
+
+	private Rectangle getRectangle() {
+		Rectangle r = new Rectangle(stackPane.getWidth(), stackPane.getHeight());
+
+		r.setFill(Color.WHITE);
+
+		return r;
+	}
 
 }
