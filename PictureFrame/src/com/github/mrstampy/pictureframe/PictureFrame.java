@@ -30,7 +30,7 @@ public class PictureFrame extends Application {
 
 	public void start(Stage primaryStage) throws Exception {
 		PictureFrame.primaryStage = primaryStage;
-		
+
 		primaryStage.setTitle("Picture Frame");
 
 		Parent pane = pictureView.getView();
@@ -65,12 +65,12 @@ public class PictureFrame extends Application {
 				changeFullScreen(newValue);
 			}
 		});
-		
+
 		primaryStage.addEventHandler(KeyEvent.KEY_TYPED, new EventHandler<KeyEvent>() {
 
 			@Override
 			public void handle(KeyEvent event) {
-				if(event.isShortcutDown() && "x".equalsIgnoreCase(event.getCharacter())) {
+				if (event.isShortcutDown() && "x".equalsIgnoreCase(event.getCharacter())) {
 					try {
 						stop();
 					} catch (Exception e) {
@@ -79,7 +79,7 @@ public class PictureFrame extends Application {
 				}
 			}
 		});
-		
+
 		scene.addEventHandler(ZoomEvent.ZOOM, new EventHandler<ZoomEvent>() {
 
 			@Override
@@ -125,25 +125,29 @@ public class PictureFrame extends Application {
 			public void run() {
 				try {
 					Thread.sleep(500);
-				} catch(InterruptedException e) {
+				} catch (InterruptedException e) {
 				}
-				
-				if(exiting) return;
-				
+
+				if (exiting) return;
+
 				settings.setFullScreen(newValue);
 				if (!newValue) {
 					Platform.runLater(new Runnable() {
-						
+
 						@Override
 						public void run() {
-							PictureFrame.primaryStage.setWidth(settings.getWidth() / 2);
-							PictureFrame.primaryStage.setHeight(settings.getHeight() / 2);
+							Rectangle2D rect = Screen.getPrimary().getVisualBounds();
+							if (settings.getWidth() == rect.getWidth()) {
+								PictureFrame.primaryStage.setWidth(settings.getWidth() / 2);
+								PictureFrame.primaryStage.setHeight(settings.getHeight() / 2);
+								PictureFrame.primaryStage.centerOnScreen();
+							}
 						}
 					});
 				}
 			}
 		};
-		
+
 		thread.start();
 	}
 
