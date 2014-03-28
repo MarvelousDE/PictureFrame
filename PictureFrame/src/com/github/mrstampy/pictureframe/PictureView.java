@@ -18,6 +18,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
@@ -37,6 +38,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class PictureView {
+	private static final BigDecimal ONE_THOUSAND = new BigDecimal(1000);
+
 	private static final Logger log = LoggerFactory.getLogger(PictureView.class);
 
 	private static final long SLIDER_FADE_TIME = 1000;
@@ -81,7 +84,6 @@ public class PictureView {
 	}
 
 	public void start() {
-		log.debug("start");
 		running = true;
 
 		scanner.scan();
@@ -90,7 +92,6 @@ public class PictureView {
 	}
 
 	private void startImpl() {
-		log.debug("startImpl");
 		Platform.runLater(new Runnable() {
 
 			@Override
@@ -102,7 +103,6 @@ public class PictureView {
 	}
 
 	private void schedule() {
-		log.debug("Scheduling switch");
 		if (timer == null) timer = new Timer("PictureFrame image switch timer", true);
 
 		timer.schedule(new TimerTask() {
@@ -208,7 +208,6 @@ public class PictureView {
 
 			@Override
 			public void handle(ActionEvent event) {
-				log.debug("schedule");
 				schedule();
 			}
 		});
@@ -239,17 +238,25 @@ public class PictureView {
 			@Override
 			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
 				setDuration(newValue.longValue());
-				label.setText(getFadeDuration(newValue.doubleValue()));
+				label.setText(getFadeDuration(getDuration()));
 			}
 		});
 		sliderFade.setFromValue(0.0);
 		sliderFade.setToValue(1.0);
+		sliderFade.setOnFinished(new EventHandler<ActionEvent>() {
+			
+			@Override
+			public void handle(ActionEvent event) {
+				if(sliderBox.getOpacity() == 0) vbox.setCursor(Cursor.NONE);
+			}
+		});
 		
 		sliderBox.setAlignment(Pos.CENTER);
+		vbox.setCursor(Cursor.NONE);
 	}
 	
 	private String getFadeDuration(double millis) {
-		return new BigDecimal(millis).divide(new BigDecimal(1000), 3, RoundingMode.HALF_UP).toString() + " seconds";
+		return new BigDecimal(millis).divide(ONE_THOUSAND, 3, RoundingMode.HALF_UP).toString() + " seconds";
 	}
 
 	public void setHeight(double height) {
@@ -286,6 +293,17 @@ public class PictureView {
 		return r;
 	}
 
+	private void handleMove(MouseEvent event) {
+		if (sliderBox.getOpacity() == 0) {
+			vbox.setCursor(Cursor.DEFAULT);
+			sliderFade.stop();
+			sliderFade.setFromValue(0.0);
+			sliderFade.setToValue(1.0);
+			sliderFade.play();
+			sliderBox.toFront();
+		}
+	}
+
 	public EventHandler<MouseEvent> getMouseEventHandler() {
 		return new EventHandler<MouseEvent>() {
 
@@ -310,16 +328,6 @@ public class PictureView {
 					mouseDetectThread.start();
 				} else {
 					mouseDetectThread.lastDetection = System.currentTimeMillis();
-				}
-			}
-
-			private void handleMove(MouseEvent event) {
-				if (sliderBox.getOpacity() == 0) {
-					sliderFade.stop();
-					sliderFade.setFromValue(0.0);
-					sliderFade.setToValue(1.0);
-					sliderFade.play();
-					sliderBox.toFront();
 				}
 			}
 
@@ -399,7 +407,6 @@ public class PictureView {
 
 				@Override
 				public void run() {
-					log.debug("Starting fade");
 					sliderFade.stop();
 					sliderFade.setFromValue(sliderBox.getOpacity());
 					sliderFade.setToValue(0.0);

@@ -13,47 +13,47 @@ import javafx.stage.StageStyle;
 
 public class PictureFrame extends Application {
 
-  private PictureView pictureView = new PictureView();
+	private PictureView pictureView = new PictureView();
 
-  public void start(Stage primaryStage) throws Exception {
-    pictureView.setDirectory(new File("/Users/burton/Fandom"));
+	public void start(Stage primaryStage) throws Exception {
+		pictureView.setDirectory(new File("/Users/burton/Fandom"));
 
-    Parent pane = pictureView.getView();
+		Parent pane = pictureView.getView();
 
-    Scene scene = new Scene(pane);
-    primaryStage.setScene(scene);
+		Scene scene = new Scene(pane);
+		primaryStage.setScene(scene);
 
-    primaryStage.heightProperty().addListener(new ChangeListener<Number>() {
+		primaryStage.heightProperty().addListener(new ChangeListener<Number>() {
 
-      @Override
-      public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-        pictureView.setHeight(newValue.doubleValue());
-      }
-    });
+			@Override
+			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+				pictureView.setHeight(newValue.doubleValue());
+			}
+		});
 
-    primaryStage.widthProperty().addListener(new ChangeListener<Number>() {
+		primaryStage.widthProperty().addListener(new ChangeListener<Number>() {
 
-      @Override
-      public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-        pictureView.setWidth(newValue.doubleValue());
-      }
-    });
-    
-    primaryStage.addEventFilter(MouseEvent.ANY, pictureView.getMouseEventHandler());
-    primaryStage.initStyle(StageStyle.UNIFIED);
-    primaryStage.setHeight(1000);
-    primaryStage.setWidth(1000);
-    primaryStage.centerOnScreen();
-    primaryStage.show();
-  }
-  
-  public void stop() throws Exception {
-    pictureView.stop();
-    System.exit(0);
-  }
+			@Override
+			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+				pictureView.setWidth(newValue.doubleValue());
+			}
+		});
 
-  public static void main(String[] args) {
-    launch(args);
-  }
+		primaryStage.addEventFilter(MouseEvent.ANY, pictureView.getMouseEventHandler());
+		primaryStage.initStyle(StageStyle.UNIFIED);
+		primaryStage.setHeight(1000);
+		primaryStage.setWidth(1000);
+		primaryStage.centerOnScreen();
+		primaryStage.show();
+	}
+
+	public void stop() throws Exception {
+		pictureView.stop();
+		System.exit(0);
+	}
+
+	public static void main(String[] args) {
+		launch(args);
+	}
 
 }
