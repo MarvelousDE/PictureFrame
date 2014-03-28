@@ -1,12 +1,7 @@
 package com.github.mrstampy.pictureframe;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Random;
@@ -47,13 +42,12 @@ public class PictureView {
 
 	private static final Logger log = LoggerFactory.getLogger(PictureView.class);
 
-	private static final String workdir = System.getProperty("user.home") + File.separator + ".pictureview";
-
 	private static final long SLIDER_FADE_TIME = 1000;
 
 	private Timer timer;
 
 	private PictureScanner scanner = new PictureScanner();
+	private Settings settings = new Settings();
 
 	private ImageView view1 = new ImageView();
 	private ImageView view2 = new ImageView();
@@ -88,60 +82,73 @@ public class PictureView {
 		init();
 	}
 
-	public void setDirectory(File directory) {
-		scanner.setDirectory(directory);
-	}
-
-	private void setDirectory(String directory) {
-		scanner.setDirectory(directory);
-	}
-
 	public void start() {
-		setDirectory(getLastDirectory());
-		
+		setDirectory(settings.getLastDirectory());
+		setDuration(settings.getDuration());
+
 		scanner.scan();
-		
-		while (scanner.size() == 0) showDirectoryChooser();
+
+		while (scanner.size() == 0)
+			showDirectoryChooser();
 
 		running = true;
 
 		startImpl();
 	}
 
-	private String getLastDirectory() {
-		File userfile = new File(workdir, "pv.config");
-
-		if (!userfile.exists()) {
-			File userdir = new File(workdir);
-			userdir.mkdirs();
-			setLastDirectory(".");
-			return ".";
+	public void stop() {
+		log.debug("stop");
+		running = false;
+		if (timer != null) {
+			timer.cancel();
+			timer = null;
 		}
 
-		try {
-			BufferedInputStream bis = new BufferedInputStream(new FileInputStream(userfile));
-			byte[] b = new byte[bis.available()];
-			bis.read(b);
-			bis.close();
-			return new String(b);
-		} catch (IOException e) {
-			log.error("Cannot read last directory", e);
-		}
-
-		return ".";
+		stopAnimations();
+		reset();
 	}
 
-	private void setLastDirectory(String dir) {
-		File userfile = new File(workdir, "pv.config");
+	public long getDuration() {
+		return duration;
+	}
 
-		try {
-			BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(userfile));
-			bos.write(dir.getBytes());
-			bos.flush();
-			bos.close();
-		} catch (IOException e) {
-			log.error("Cannot write last directory", e);
-		}
+	public void setDuration(long duration) {
+		this.duration = duration;
+	}
+
+	public long getTransition() {
+		return transition;
+	}
+
+	public void setTransition(long transition) {
+		this.transition = transition;
+	}
+
+	public Parent getView() {
+		return vbox;
+	}
+
+	public void setHeight(double height) {
+		view1.setFitHeight(height);
+		view2.setFitHeight(height);
+		r.setHeight(height);
+	}
+
+	public void setWidth(double width) {
+		r.setWidth(width);
+	}
+
+	private void reset() {
+		fillTransition.setToValue(Color.WHITE);
+		fillTransition.playFromStart();
+	}
+
+	private void stopAnimations() {
+		fillTransition.stop();
+	}
+
+	private void setDirectory(String directory) {
+		scanner.setDirectory(directory);
 	}
 
 	private void startImpl() {
@@ -175,47 +182,6 @@ public class PictureView {
 				transition();
 			}
 		});
-	}
-
-	public void stop() {
-		log.debug("stop");
-		running = false;
-		if (timer != null) {
-			timer.cancel();
-			timer = null;
-		}
-
-		stopAnimations();
-		reset();
-	}
-
-	private void reset() {
-		fillTransition.setToValue(Color.WHITE);
-		fillTransition.playFromStart();
-	}
-
-	private void stopAnimations() {
-		fillTransition.stop();
-	}
-
-	public long getDuration() {
-		return duration;
-	}
-
-	public void setDuration(long duration) {
-		this.duration = duration;
-	}
-
-	public long getTransition() {
-		return transition;
-	}
-
-	public void setTransition(long transition) {
-		this.transition = transition;
-	}
-
-	public Parent getView() {
-		return vbox;
 	}
 
 	private void transition() {
@@ -278,6 +244,11 @@ public class PictureView {
 			}
 		});
 
+		initControls();
+		vbox.setCursor(Cursor.NONE);
+	}
+
+	private void initControls() {
 		label.setFont(Font.font(32));
 		label.setText(getFadeDuration(slider.getValue()));
 
@@ -292,8 +263,11 @@ public class PictureView {
 			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
 				setDuration(newValue.longValue());
 				label.setText(getFadeDuration(getDuration()));
+				settings.setDuration(getDuration());
 			}
 		});
+		slider.setValue(settings.getDuration());
+		
 		sliderFade.setFromValue(0.0);
 		sliderFade.setToValue(1.0);
 		sliderFade.setOnFinished(new EventHandler<ActionEvent>() {
@@ -305,21 +279,10 @@ public class PictureView {
 		});
 
 		sliderBox.setAlignment(Pos.CENTER);
-		vbox.setCursor(Cursor.NONE);
 	}
 
 	private String getFadeDuration(double millis) {
 		return new BigDecimal(millis).divide(ONE_THOUSAND, 3, RoundingMode.HALF_UP).toString() + " seconds";
-	}
-
-	public void setHeight(double height) {
-		view1.setFitHeight(height);
-		view2.setFitHeight(height);
-		r.setHeight(height);
-	}
-
-	public void setWidth(double width) {
-		r.setWidth(width);
 	}
 
 	private void next() {
@@ -369,7 +332,7 @@ public class PictureView {
 		dirChooserShowing = false;
 		if (chosen != null) {
 			scanner.setDirectory(chosen);
-			setLastDirectory(chosen.getAbsolutePath());
+			settings.setLastDirectory(chosen.getAbsolutePath());
 		}
 	}
 

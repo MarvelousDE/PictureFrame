@@ -1,7 +1,5 @@
 package com.github.mrstampy.pictureframe;
 
-import java.io.File;
-
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -18,8 +16,6 @@ public class PictureFrame extends Application {
 	static Stage primaryStage;
 
 	public void start(Stage primaryStage) throws Exception {
-		pictureView.setDirectory(new File("/Users/burton/Fandom"));
-		
 		PictureFrame.primaryStage = primaryStage;
 
 		Parent pane = pictureView.getView();
