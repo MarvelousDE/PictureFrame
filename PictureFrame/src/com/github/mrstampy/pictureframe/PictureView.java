@@ -172,10 +172,10 @@ public class PictureView {
 
 		pt.stop();
 
-		fade1.setFromValue(isFrom1 ? 1.0 : 0.0);
+		fade1.setFromValue(view1.getOpacity());
 		fade1.setToValue(isFrom1 ? 0.0 : 1.0);
 
-		fade2.setFromValue(isFrom1 ? 0.0 : 1.0);
+		fade2.setFromValue(view2.getOpacity());
 		fade2.setToValue(isFrom1 ? 1.0 : 0.0);
 
 		pt.play();
