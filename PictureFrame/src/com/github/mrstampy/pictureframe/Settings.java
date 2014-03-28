@@ -9,13 +9,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Settings {
+
 	private static final Logger log = LoggerFactory.getLogger(Settings.class);
 
 	private static final String PV_PROPERTIES = "pv.properties";
 	private static final String WORK_DIR = System.getProperty("user.home") + File.separator + ".pictureview";
-	
-	private static final String PICTURE_DURATION = "picture.duration";
+
+	private static final String PICTURE_DURATION_KEY = "picture.duration";
 	private static final String PICTURE_DIR_KEY = "picture.dir";
+	private static final String WIDTH_KEY = "width";
+	private static final String HEIGHT_KEY = "height";
 
 	private Properties properties = new Properties();
 	private File userfile = new File(WORK_DIR, PV_PROPERTIES);
@@ -32,21 +35,52 @@ public class Settings {
 		properties.setProperty(PICTURE_DIR_KEY, dir);
 		store();
 	}
-	
+
 	public long getDuration() {
-		String ds = properties.getProperty(PICTURE_DURATION);
-		
+		String ds = properties.getProperty(PICTURE_DURATION_KEY);
+
 		try {
 			return Long.parseLong(ds);
-		} catch(Exception e) {
+		} catch (Exception e) {
 			setDuration(5000);
 			return 5000;
 		}
 	}
-	
+
 	public void setDuration(long duration) {
-		properties.setProperty(PICTURE_DURATION, Long.toString(duration));
+		properties.setProperty(PICTURE_DURATION_KEY, Long.toString(duration));
 		store();
+	}
+
+	public double getWidth() {
+		return getDoubleProperty(WIDTH_KEY, 1000);
+	}
+
+	public double getHeight() {
+		return getDoubleProperty(HEIGHT_KEY, 1000);
+	}
+
+	public void setWidth(double width) {
+		properties.setProperty(WIDTH_KEY, Double.toString(width));
+		store();
+	}
+
+	public void setHeight(double height) {
+		properties.setProperty(HEIGHT_KEY, Double.toString(height));
+		store();
+	}
+
+	private double getDoubleProperty(String key, double dflt) {
+		String s = properties.getProperty(key);
+
+		try {
+			return Double.parseDouble(s);
+		} catch (Exception e) {
+			properties.setProperty(key, Double.toString(dflt));
+			store();
+		}
+
+		return dflt;
 	}
 
 	private void store() {

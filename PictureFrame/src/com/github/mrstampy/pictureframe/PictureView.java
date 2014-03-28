@@ -47,7 +47,7 @@ public class PictureView {
 	private Timer timer;
 
 	private PictureScanner scanner = new PictureScanner();
-	private Settings settings = new Settings();
+	private Settings settings;
 
 	private ImageView view1 = new ImageView();
 	private ImageView view2 = new ImageView();
@@ -78,7 +78,8 @@ public class PictureView {
 
 	private boolean dirChooserShowing;
 
-	public PictureView() {
+	public PictureView(Settings settings) {
+		this.settings = settings;
 		init();
 	}
 

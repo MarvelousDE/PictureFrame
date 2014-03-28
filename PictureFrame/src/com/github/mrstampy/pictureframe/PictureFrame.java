@@ -11,8 +11,9 @@ import javafx.stage.StageStyle;
 
 public class PictureFrame extends Application {
 
-	private PictureView pictureView = new PictureView();
-	
+	private Settings settings = new Settings();
+	private PictureView pictureView = new PictureView(settings);
+
 	static Stage primaryStage;
 
 	public void start(Stage primaryStage) throws Exception {
@@ -28,6 +29,7 @@ public class PictureFrame extends Application {
 			@Override
 			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
 				pictureView.setHeight(newValue.doubleValue());
+				settings.setHeight(newValue.doubleValue());
 			}
 		});
 
@@ -36,13 +38,14 @@ public class PictureFrame extends Application {
 			@Override
 			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
 				pictureView.setWidth(newValue.doubleValue());
+				settings.setWidth(newValue.doubleValue());
 			}
 		});
 
 		primaryStage.addEventFilter(MouseEvent.ANY, pictureView.getMouseEventHandler());
 		primaryStage.initStyle(StageStyle.UNIFIED);
-		primaryStage.setHeight(1000);
-		primaryStage.setWidth(1000);
+		primaryStage.setHeight(settings.getHeight());
+		primaryStage.setWidth(settings.getWidth());
 		primaryStage.centerOnScreen();
 		primaryStage.show();
 	}
