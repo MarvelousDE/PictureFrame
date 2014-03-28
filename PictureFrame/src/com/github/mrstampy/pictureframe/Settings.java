@@ -13,6 +13,7 @@ public class Settings {
 
 	private static final String PV_PROPERTIES = "pv.properties";
 	private static final String WORK_DIR = System.getProperty("user.home") + File.separator + ".pictureview";
+	
 	private static final String PICTURE_DURATION = "picture.duration";
 	private static final String PICTURE_DIR_KEY = "picture.dir";
 
@@ -23,11 +24,11 @@ public class Settings {
 		loadProperties();
 	}
 
-	public String getLastDirectory() {
+	public String getDirectory() {
 		return properties.getProperty(PICTURE_DIR_KEY);
 	}
 
-	public void setLastDirectory(String dir) {
+	public void setDirectory(String dir) {
 		properties.setProperty(PICTURE_DIR_KEY, dir);
 		store();
 	}
@@ -62,7 +63,7 @@ public class Settings {
 		if (!userfile.exists()) {
 			File userdir = new File(WORK_DIR);
 			userdir.mkdirs();
-			setLastDirectory(".");
+			setDirectory(".");
 		}
 
 		try {

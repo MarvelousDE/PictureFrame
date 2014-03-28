@@ -83,7 +83,7 @@ public class PictureView {
 	}
 
 	public void start() {
-		setDirectory(settings.getLastDirectory());
+		setDirectory(settings.getDirectory());
 		setDuration(settings.getDuration());
 
 		scanner.scan();
@@ -332,7 +332,7 @@ public class PictureView {
 		dirChooserShowing = false;
 		if (chosen != null) {
 			scanner.setDirectory(chosen);
-			settings.setLastDirectory(chosen.getAbsolutePath());
+			settings.setDirectory(chosen.getAbsolutePath());
 		}
 	}
 
