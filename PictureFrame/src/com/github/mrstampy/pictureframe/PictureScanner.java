@@ -73,6 +73,10 @@ public class PictureScanner {
       lock.unlock();
     }
   }
+  
+  public int size() {
+  	return pictureNames.size();
+  }
 
   private boolean isPictureFile(String name) {
     for (String sfx : picSuffixes) {

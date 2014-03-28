@@ -1,7 +1,12 @@
 package com.github.mrstampy.pictureframe;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Random;
@@ -41,6 +46,8 @@ public class PictureView {
 	private static final BigDecimal ONE_THOUSAND = new BigDecimal(1000);
 
 	private static final Logger log = LoggerFactory.getLogger(PictureView.class);
+
+	private static final String workdir = System.getProperty("user.home") + File.separator + ".pictureview";
 
 	private static final long SLIDER_FADE_TIME = 1000;
 
@@ -85,12 +92,56 @@ public class PictureView {
 		scanner.setDirectory(directory);
 	}
 
+	private void setDirectory(String directory) {
+		scanner.setDirectory(directory);
+	}
+
 	public void start() {
+		setDirectory(getLastDirectory());
+		
+		scanner.scan();
+		
+		while (scanner.size() == 0) showDirectoryChooser();
+
 		running = true;
 
-		scanner.scan();
-
 		startImpl();
+	}
+
+	private String getLastDirectory() {
+		File userfile = new File(workdir, "pv.config");
+
+		if (!userfile.exists()) {
+			File userdir = new File(workdir);
+			userdir.mkdirs();
+			setLastDirectory(".");
+			return ".";
+		}
+
+		try {
+			BufferedInputStream bis = new BufferedInputStream(new FileInputStream(userfile));
+			byte[] b = new byte[bis.available()];
+			bis.read(b);
+			bis.close();
+			return new String(b);
+		} catch (IOException e) {
+			log.error("Cannot read last directory", e);
+		}
+
+		return ".";
+	}
+
+	private void setLastDirectory(String dir) {
+		File userfile = new File(workdir, "pv.config");
+
+		try {
+			BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(userfile));
+			bos.write(dir.getBytes());
+			bos.flush();
+			bos.close();
+		} catch (IOException e) {
+			log.error("Cannot write last directory", e);
+		}
 	}
 
 	private void startImpl() {
@@ -306,6 +357,22 @@ public class PictureView {
 		}
 	}
 
+	private void showDirectoryChooser() {
+		DirectoryChooser chooser = new DirectoryChooser();
+		chooser.setTitle("Picture Directories");
+		chooser.setInitialDirectory(scanner.getDirectory());
+
+		dirChooserShowing = true;
+		vbox.setCursor(Cursor.DEFAULT);
+		File chosen = chooser.showDialog(PictureFrame.primaryStage);
+		vbox.setCursor(Cursor.NONE);
+		dirChooserShowing = false;
+		if (chosen != null) {
+			scanner.setDirectory(chosen);
+			setLastDirectory(chosen.getAbsolutePath());
+		}
+	}
+
 	public EventHandler<MouseEvent> getMouseEventHandler() {
 		return new EventHandler<MouseEvent>() {
 
@@ -380,19 +447,6 @@ public class PictureView {
 				if (singleClick == null || !singleClick.isAlive()) return;
 
 				singleClick.stop();
-			}
-
-			private void showDirectoryChooser() {
-				DirectoryChooser chooser = new DirectoryChooser();
-				chooser.setTitle("Picture Directories");
-				chooser.setInitialDirectory(scanner.getDirectory());
-
-				dirChooserShowing = true;
-				vbox.setCursor(Cursor.DEFAULT);
-				File chosen = chooser.showDialog(PictureFrame.primaryStage);
-				vbox.setCursor(Cursor.NONE);
-				dirChooserShowing = false;
-				if (chosen != null) scanner.setDirectory(chosen);
 			}
 		};
 	}
