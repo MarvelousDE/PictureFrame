@@ -2,6 +2,8 @@ package com.github.mrstampy.pictureframe;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -11,9 +13,14 @@ import javafx.animation.FillTransition;
 import javafx.animation.Interpolator;
 import javafx.animation.ParallelTransition;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
+import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
@@ -22,6 +29,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
 import javafx.stage.DirectoryChooser;
 import javafx.util.Duration;
 
@@ -30,6 +38,8 @@ import org.slf4j.LoggerFactory;
 
 public class PictureView {
 	private static final Logger log = LoggerFactory.getLogger(PictureView.class);
+
+	private static final long SLIDER_FADE_TIME = 1000;
 
 	private Timer timer;
 
@@ -46,10 +56,15 @@ public class PictureView {
 
 	private FillTransition fillTransition;
 
-	private StackPane stackPane = new StackPane(view2, view1);
+	private Slider slider = new Slider(500, 60000, 5000);
+	private Label label = new Label();
+	private VBox sliderBox = new VBox(10, label, slider);
+	private FadeTransition sliderFade = new FadeTransition(Duration.millis(SLIDER_FADE_TIME), sliderBox);
+	
+	private StackPane stackPane = new StackPane(sliderBox, view2, view1);
 
-	private long duration = 3;
-	private long transition = 3;
+	private long duration = 5000;
+	private long transition = 5000;
 
 	private Random rand = new Random(System.nanoTime());
 
@@ -96,7 +111,7 @@ public class PictureView {
 			public void run() {
 				if (running) switchImages();
 			}
-		}, getDuration() * 1000);
+		}, getDuration());
 	}
 
 	private void switchImages() {
@@ -153,11 +168,6 @@ public class PictureView {
 	private void transition() {
 		boolean isFrom1 = fade1.getNode().getOpacity() == 1 || fade1.getCurrentRate() > 0;
 
-		log.debug("isFrom1? {}", isFrom1);
-
-		log.debug("fade1: {}", fade1.getNode().getOpacity());
-		log.debug("fade2: {}", fade2.getNode().getOpacity());
-
 		setImage((ImageView) (isFrom1 ? fade2.getNode() : fade1.getNode()));
 
 		pt.stop();
@@ -187,11 +197,11 @@ public class PictureView {
 		view2.setPreserveRatio(true);
 
 		fade1.setNode(view1);
-		fade1.setDuration(Duration.seconds(getTransition()));
+		fade1.setDuration(Duration.millis(getTransition()));
 		fade1.setInterpolator(Interpolator.LINEAR);
 
 		fade2.setNode(view2);
-		fade2.setDuration(Duration.seconds(getTransition()));
+		fade2.setDuration(Duration.millis(getTransition()));
 		fade2.setInterpolator(Interpolator.LINEAR);
 
 		fade1.setOnFinished(new EventHandler<ActionEvent>() {
@@ -215,6 +225,31 @@ public class PictureView {
 				transitionBackground();
 			}
 		});
+
+		label.setFont(Font.font(32));
+		label.setText(getFadeDuration(slider.getValue()));
+		
+		sliderBox.setOpacity(0.0);
+		
+		slider.setMajorTickUnit(5000);
+		slider.setShowTickMarks(true);
+		slider.setMaxWidth(500);
+		slider.valueProperty().addListener(new ChangeListener<Number>() {
+
+			@Override
+			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+				setDuration(newValue.longValue());
+				label.setText(getFadeDuration(newValue.doubleValue()));
+			}
+		});
+		sliderFade.setFromValue(0.0);
+		sliderFade.setToValue(1.0);
+		
+		sliderBox.setAlignment(Pos.CENTER);
+	}
+	
+	private String getFadeDuration(double millis) {
+		return new BigDecimal(millis).divide(new BigDecimal(1000), 3, RoundingMode.HALF_UP).toString() + " seconds";
 	}
 
 	public void setHeight(double height) {
@@ -227,22 +262,70 @@ public class PictureView {
 		r.setWidth(width);
 	}
 
+	private void next() {
+		boolean b = running;
+		stop();
+		running = b;
+		if (running) {
+			startImpl();
+		} else {
+			transition();
+		}
+	}
+
+	private void transitionBackground() {
+		fillTransition.setToValue(new Color(rand.nextDouble(), rand.nextDouble(), rand.nextDouble(), rand.nextDouble()));
+		fillTransition.playFromStart();
+	}
+
+	private Rectangle getRectangle() {
+		Rectangle r = new Rectangle(stackPane.getWidth(), stackPane.getHeight());
+
+		r.setFill(Color.WHITE);
+
+		return r;
+	}
+
 	public EventHandler<MouseEvent> getMouseEventHandler() {
 		return new EventHandler<MouseEvent>() {
 
 			private Thread singleClick;
+			private MouseDetectThread mouseDetectThread;
 
 			@Override
 			public void handle(MouseEvent event) {
-				// log.debug("{}", event);
+				mouseDetectCheck();
+
 				if (MouseEvent.MOUSE_PRESSED == event.getEventType()) {
 					handleMousePressed(event);
-				} else if (MouseEvent.DRAG_DETECTED == event.getEventType()) {
-					next();
+				} else if (MouseEvent.MOUSE_MOVED == event.getEventType()) {
+					handleMove(event);
+				}
+			}
+
+			private void mouseDetectCheck() {
+				if (mouseDetectThread == null || !mouseDetectThread.isAlive()) {
+					mouseDetectThread = new MouseDetectThread();
+					mouseDetectThread.lastDetection = System.currentTimeMillis();
+					mouseDetectThread.start();
+				} else {
+					mouseDetectThread.lastDetection = System.currentTimeMillis();
+				}
+			}
+
+			private void handleMove(MouseEvent event) {
+				if (sliderBox.getOpacity() == 0) {
+					sliderFade.stop();
+					sliderFade.setFromValue(0.0);
+					sliderFade.setToValue(1.0);
+					sliderFade.play();
+					sliderBox.toFront();
 				}
 			}
 
 			private void handleMousePressed(MouseEvent event) {
+				if (event.isDragDetect() || isSliderEvent(event)) return;
+
 				if (event.getClickCount() == 2) {
 					stopThread();
 					if (running) {
@@ -255,6 +338,11 @@ public class PictureView {
 				} else if (event.getClickCount() == 1) {
 					startThread();
 				}
+			}
+
+			private boolean isSliderEvent(MouseEvent event) {
+				Rectangle rect = new Rectangle(slider.getLayoutX(), slider.getLayoutY(), slider.getWidth(), slider.getHeight());
+				return rect.contains(event.getSceneX(), event.getSceneY());
 			}
 
 			private void startThread() {
@@ -295,28 +383,34 @@ public class PictureView {
 		};
 	}
 
-	private void next() {
-		boolean b = running;
-		stop();
-		running = b;
-		if (running) {
-			startImpl();
-		} else {
-			transition();
+	private class MouseDetectThread extends Thread {
+		volatile long lastDetection;
+
+		public void run() {
+			while (mouseMoved()) {
+				try {
+					sleep(SLIDER_FADE_TIME);
+				} catch (InterruptedException e) {
+
+				}
+			}
+
+			Platform.runLater(new Runnable() {
+
+				@Override
+				public void run() {
+					log.debug("Starting fade");
+					sliderFade.stop();
+					sliderFade.setFromValue(sliderBox.getOpacity());
+					sliderFade.setToValue(0.0);
+					sliderFade.play();
+				}
+			});
 		}
-	}
 
-	private void transitionBackground() {
-		fillTransition.setToValue(new Color(rand.nextDouble(), rand.nextDouble(), rand.nextDouble(), rand.nextDouble()));
-		fillTransition.playFromStart();
-	}
-
-	private Rectangle getRectangle() {
-		Rectangle r = new Rectangle(stackPane.getWidth(), stackPane.getHeight());
-
-		r.setFill(Color.WHITE);
-
-		return r;
+		private boolean mouseMoved() {
+			return slider.isValueChanging() || System.currentTimeMillis() - lastDetection < SLIDER_FADE_TIME;
+		}
 	}
 
 }
