@@ -63,7 +63,7 @@ public class PictureView {
 	private Label label = new Label();
 	private VBox sliderBox = new VBox(10, label, slider);
 	private FadeTransition sliderFade = new FadeTransition(Duration.millis(SLIDER_FADE_TIME), sliderBox);
-	
+
 	private StackPane stackPane = new StackPane(sliderBox, view2, view1);
 
 	private long duration = 5000;
@@ -74,6 +74,8 @@ public class PictureView {
 	private VBox vbox = new VBox(stackPane);
 
 	private volatile boolean running;
+
+	private boolean dirChooserShowing;
 
 	public PictureView() {
 		init();
@@ -227,9 +229,9 @@ public class PictureView {
 
 		label.setFont(Font.font(32));
 		label.setText(getFadeDuration(slider.getValue()));
-		
+
 		sliderBox.setOpacity(0.0);
-		
+
 		slider.setMajorTickUnit(5000);
 		slider.setShowTickMarks(true);
 		slider.setMaxWidth(500);
@@ -244,17 +246,17 @@ public class PictureView {
 		sliderFade.setFromValue(0.0);
 		sliderFade.setToValue(1.0);
 		sliderFade.setOnFinished(new EventHandler<ActionEvent>() {
-			
+
 			@Override
 			public void handle(ActionEvent event) {
-				if(sliderBox.getOpacity() == 0) vbox.setCursor(Cursor.NONE);
+				if (sliderBox.getOpacity() == 0) vbox.setCursor(Cursor.NONE);
 			}
 		});
-		
+
 		sliderBox.setAlignment(Pos.CENTER);
 		vbox.setCursor(Cursor.NONE);
 	}
-	
+
 	private String getFadeDuration(double millis) {
 		return new BigDecimal(millis).divide(ONE_THOUSAND, 3, RoundingMode.HALF_UP).toString() + " seconds";
 	}
@@ -385,7 +387,11 @@ public class PictureView {
 				chooser.setTitle("Picture Directories");
 				chooser.setInitialDirectory(scanner.getDirectory());
 
-				File chosen = chooser.showDialog(null);
+				dirChooserShowing = true;
+				vbox.setCursor(Cursor.DEFAULT);
+				File chosen = chooser.showDialog(PictureFrame.primaryStage);
+				vbox.setCursor(Cursor.NONE);
+				dirChooserShowing = false;
 				if (chosen != null) scanner.setDirectory(chosen);
 			}
 		};
@@ -416,7 +422,8 @@ public class PictureView {
 		}
 
 		private boolean mouseMoved() {
-			return slider.isValueChanging() || System.currentTimeMillis() - lastDetection < SLIDER_FADE_TIME;
+			return dirChooserShowing || slider.isValueChanging()
+					|| System.currentTimeMillis() - lastDetection < SLIDER_FADE_TIME;
 		}
 	}
 

@@ -14,9 +14,13 @@ import javafx.stage.StageStyle;
 public class PictureFrame extends Application {
 
 	private PictureView pictureView = new PictureView();
+	
+	static Stage primaryStage;
 
 	public void start(Stage primaryStage) throws Exception {
 		pictureView.setDirectory(new File("/Users/burton/Fandom"));
+		
+		PictureFrame.primaryStage = primaryStage;
 
 		Parent pane = pictureView.getView();
 
