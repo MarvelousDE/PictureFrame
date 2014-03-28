@@ -138,6 +138,16 @@ public class PictureView {
 	public void setWidth(double width) {
 		r.setWidth(width);
 	}
+	
+	public void zoom(double factor) {
+		scale(view1, factor);
+		scale(view2, factor);
+	}
+
+	private void scale(ImageView view, double factor) {
+		view.setScaleX(view.getScaleX() * factor);
+		view.setScaleY(view.getScaleY() * factor);
+	}
 
 	private void reset() {
 		fillTransition.setToValue(Color.WHITE);

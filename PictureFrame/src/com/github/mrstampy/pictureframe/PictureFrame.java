@@ -1,8 +1,5 @@
 package com.github.mrstampy.pictureframe;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -13,9 +10,13 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ZoomEvent;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PictureFrame extends Application {
 	private static final Logger log = LoggerFactory.getLogger(PictureFrame.class);
@@ -41,6 +42,7 @@ public class PictureFrame extends Application {
 
 			@Override
 			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+				pictureView.zoom(1.0);
 				pictureView.setHeight(newValue.doubleValue());
 				settings.setHeight(newValue.doubleValue());
 			}
@@ -50,6 +52,7 @@ public class PictureFrame extends Application {
 
 			@Override
 			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+				pictureView.zoom(1.0);
 				pictureView.setWidth(newValue.doubleValue());
 				settings.setWidth(newValue.doubleValue());
 			}
@@ -74,6 +77,14 @@ public class PictureFrame extends Application {
 						log.error("Error on stop", e);
 					}
 				}
+			}
+		});
+		
+		scene.addEventHandler(ZoomEvent.ZOOM, new EventHandler<ZoomEvent>() {
+
+			@Override
+			public void handle(ZoomEvent event) {
+				pictureView.zoom(event.getZoomFactor());
 			}
 		});
 
