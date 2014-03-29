@@ -78,6 +78,22 @@ public class PictureFrame extends Application {
 			}
 		});
 
+		primaryStage.xProperty().addListener(new ChangeListener<Number>() {
+
+			@Override
+			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+				settings.setX(newValue.doubleValue());
+			}
+		});
+
+		primaryStage.yProperty().addListener(new ChangeListener<Number>() {
+
+			@Override
+			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+				settings.setY(newValue.doubleValue());
+			}
+		});
+
 		scene.addEventHandler(ZoomEvent.ZOOM, new EventHandler<ZoomEvent>() {
 
 			@Override
@@ -94,7 +110,13 @@ public class PictureFrame extends Application {
 		} else {
 			primaryStage.setHeight(settings.getHeight());
 			primaryStage.setWidth(settings.getWidth());
-			primaryStage.centerOnScreen();
+
+			if (settings.getX() == 0.0) {
+				primaryStage.centerOnScreen();
+			} else {
+				primaryStage.setX(settings.getX());
+				primaryStage.setY(settings.getY());
+			}
 		}
 
 		primaryStage.show();

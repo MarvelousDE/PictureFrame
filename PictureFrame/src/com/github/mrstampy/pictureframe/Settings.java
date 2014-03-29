@@ -20,6 +20,8 @@ public class Settings {
 	private static final String FULL_SCREEN_KEY = "full.screen";
 	private static final String WIDTH_KEY = "width";
 	private static final String HEIGHT_KEY = "height";
+	private static final String X_KEY = "x";
+	private static final String Y_KEY = "y";
 
 	private Properties properties = new Properties();
 	private File userfile = new File(WORK_DIR, PV_PROPERTIES);
@@ -77,6 +79,24 @@ public class Settings {
 
 	public void setHeight(double height) {
 		properties.setProperty(HEIGHT_KEY, Double.toString(height));
+		store();
+	}
+	
+	public double getX() {
+		return getDoubleProperty(X_KEY, 0);
+	}
+	
+	public void setX(double x) {
+		properties.setProperty(X_KEY, Double.toString(x));
+		store();
+	}
+	
+	public double getY() {
+		return getDoubleProperty(Y_KEY, 0);
+	}
+	
+	public void setY(double y) {
+		properties.setProperty(Y_KEY, Double.toString(y));
 		store();
 	}
 
