@@ -38,71 +38,15 @@ public class PictureFrame extends Application {
 		Scene scene = new Scene(pane);
 		primaryStage.setScene(scene);
 
-		primaryStage.heightProperty().addListener(new ChangeListener<Number>() {
-
-			@Override
-			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-				pictureView.setHeight(newValue.doubleValue());
-				settings.setHeight(newValue.doubleValue());
-			}
-		});
-
-		primaryStage.widthProperty().addListener(new ChangeListener<Number>() {
-
-			@Override
-			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-				pictureView.setWidth(newValue.doubleValue());
-				settings.setWidth(newValue.doubleValue());
-			}
-		});
-
-		primaryStage.fullScreenProperty().addListener(new ChangeListener<Boolean>() {
-
-			@Override
-			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-				changeFullScreen(newValue);
-			}
-		});
-
-		primaryStage.addEventHandler(KeyEvent.KEY_TYPED, new EventHandler<KeyEvent>() {
-
-			@Override
-			public void handle(KeyEvent event) {
-				if (event.isShortcutDown() && "x".equalsIgnoreCase(event.getCharacter())) {
-					try {
-						stop();
-					} catch (Exception e) {
-						log.error("Error on stop", e);
-					}
-				}
-			}
-		});
-
-		primaryStage.xProperty().addListener(new ChangeListener<Number>() {
-
-			@Override
-			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-				settings.setX(newValue.doubleValue());
-			}
-		});
-
-		primaryStage.yProperty().addListener(new ChangeListener<Number>() {
-
-			@Override
-			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-				settings.setY(newValue.doubleValue());
-			}
-		});
-
-		scene.addEventHandler(ZoomEvent.ZOOM, new EventHandler<ZoomEvent>() {
-
-			@Override
-			public void handle(ZoomEvent event) {
-				pictureView.zoom(event.getZoomFactor());
-			}
-		});
-
-		primaryStage.addEventFilter(MouseEvent.ANY, pictureView.getMouseEventHandler());
+		addHeightListener(primaryStage);
+		addWidthListener(primaryStage);
+		addFullScreenListener(primaryStage);
+		addCtrlXListener(primaryStage);
+		addXPosListener(primaryStage);
+		addYPosListener(primaryStage);
+		addZoomListener(scene);
+		primaryStage.addEventHandler(MouseEvent.ANY, pictureView.getMouseEventHandler());
+		
 		primaryStage.initStyle(StageStyle.UNIFIED);
 		if (settings.isFullScreen()) {
 			primaryStage.setFullScreen(true);
@@ -122,6 +66,84 @@ public class PictureFrame extends Application {
 		primaryStage.show();
 
 		if (settings.isFullScreen()) fullScreenPrep(primaryStage);
+	}
+
+	private void addZoomListener(Scene scene) {
+		scene.addEventHandler(ZoomEvent.ZOOM, new EventHandler<ZoomEvent>() {
+
+			@Override
+			public void handle(ZoomEvent event) {
+				pictureView.zoom(event.getZoomFactor());
+			}
+		});
+	}
+
+	private void addYPosListener(Stage primaryStage) {
+		primaryStage.yProperty().addListener(new ChangeListener<Number>() {
+
+			@Override
+			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+				settings.setY(newValue.doubleValue());
+			}
+		});
+	}
+
+	private void addXPosListener(Stage primaryStage) {
+		primaryStage.xProperty().addListener(new ChangeListener<Number>() {
+
+			@Override
+			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+				settings.setX(newValue.doubleValue());
+			}
+		});
+	}
+
+	private void addCtrlXListener(Stage primaryStage) {
+		primaryStage.addEventHandler(KeyEvent.KEY_TYPED, new EventHandler<KeyEvent>() {
+
+			@Override
+			public void handle(KeyEvent event) {
+				if (event.isShortcutDown() && "x".equalsIgnoreCase(event.getCharacter())) {
+					try {
+						stop();
+					} catch (Exception e) {
+						log.error("Error on stop", e);
+					}
+				}
+			}
+		});
+	}
+
+	private void addFullScreenListener(Stage primaryStage) {
+		primaryStage.fullScreenProperty().addListener(new ChangeListener<Boolean>() {
+
+			@Override
+			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+				changeFullScreen(newValue);
+			}
+		});
+	}
+
+	private void addWidthListener(Stage primaryStage) {
+		primaryStage.widthProperty().addListener(new ChangeListener<Number>() {
+
+			@Override
+			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+				pictureView.setWidth(newValue.doubleValue());
+				settings.setWidth(newValue.doubleValue());
+			}
+		});
+	}
+
+	private void addHeightListener(Stage primaryStage) {
+		primaryStage.heightProperty().addListener(new ChangeListener<Number>() {
+
+			@Override
+			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+				pictureView.setHeight(newValue.doubleValue());
+				settings.setHeight(newValue.doubleValue());
+			}
+		});
 	}
 
 	private void fullScreenPrep(Stage primaryStage) {
