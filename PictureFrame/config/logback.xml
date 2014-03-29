@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!--
-	HIT logging configuration. 
-	
-	http://logback.qos.ch/manual/configuration.html
- -->
+
 <configuration scan="true">
 
 	<consolePlugin />
@@ -14,8 +10,27 @@
 			</pattern>
 		</encoder>
 	</appender>
+	
+	<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+	    
+		<file>${user.home}/.pictureframe/pictureframe.log</file>
 
-	<logger name="com.github.mrstampy" level="debug" />
+		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+			<fileNamePattern>${user.home}/.pictureframe/pictureframe.%i.log.zip</fileNamePattern>
+			<minIndex>1</minIndex>
+			<maxIndex>10</maxIndex>
+		</rollingPolicy>
+
+		<triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+			<maxFileSize>50MB</maxFileSize>
+		</triggeringPolicy>
+
+		<encoder>
+			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<logger name="com.github.mrstampy" level="info" />
 
 	<root level="info">
 		<appender-ref ref="CONSOLE" />

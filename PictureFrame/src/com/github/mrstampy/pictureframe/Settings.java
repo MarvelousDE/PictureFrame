@@ -12,8 +12,8 @@ public class Settings {
 
 	private static final Logger log = LoggerFactory.getLogger(Settings.class);
 
-	private static final String PV_PROPERTIES = "pv.properties";
-	private static final String WORK_DIR = System.getProperty("user.home") + File.separator + ".pictureview";
+	private static final String PV_PROPERTIES = "pf.properties";
+	private static final String WORK_DIR = System.getProperty("user.home") + File.separator + ".pictureframe";
 
 	private static final String PICTURE_DURATION_KEY = "picture.duration";
 	private static final String PICTURE_DIR_KEY = "picture.dir";
