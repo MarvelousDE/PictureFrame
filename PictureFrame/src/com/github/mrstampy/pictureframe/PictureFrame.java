@@ -8,6 +8,7 @@ import javafx.event.EventHandler;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ZoomEvent;
@@ -46,6 +47,8 @@ public class PictureFrame extends Application {
 		addYPosListener(primaryStage);
 		addZoomListener(scene);
 		primaryStage.addEventHandler(MouseEvent.ANY, pictureView.getMouseEventHandler());
+		
+		primaryStage.getIcons().add(new Image("frame.png"));
 		
 		primaryStage.initStyle(StageStyle.UNIFIED);
 		if (settings.isFullScreen()) {
