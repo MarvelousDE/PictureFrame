@@ -84,13 +84,9 @@ public class PictureView {
 	}
 
 	public void start() {
-		setDirectory(settings.getDirectory());
-		setDuration(settings.getDuration());
-
-		scanner.scan();
-
-		while (scanner.size() == 0)
+		while (scanner.size() == 0) {
 			showDirectoryChooser();
+		}
 
 		running = true;
 
@@ -138,7 +134,7 @@ public class PictureView {
 	public void setWidth(double width) {
 		r.setWidth(width);
 	}
-	
+
 	public void zoom(double factor) {
 		scale(view1, factor);
 		scale(view2, factor);
@@ -259,7 +255,6 @@ public class PictureView {
 		vbox.setCursor(Cursor.NONE);
 		setDirectory(settings.getDirectory());
 		setDuration(settings.getDuration());
-		scanner.scan();
 	}
 
 	private void initControls() {
@@ -281,14 +276,14 @@ public class PictureView {
 			}
 		});
 		slider.setValue(settings.getDuration());
-		
+
 		sliderFade.setFromValue(0.0);
 		sliderFade.setToValue(1.0);
 		sliderFade.setOnFinished(new EventHandler<ActionEvent>() {
 
 			@Override
 			public void handle(ActionEvent event) {
-				if (sliderBox.getOpacity() == 0 && ! dirChooserShowing) vbox.setCursor(Cursor.NONE);
+				if (sliderBox.getOpacity() == 0 && !dirChooserShowing) vbox.setCursor(Cursor.NONE);
 			}
 		});
 
@@ -306,7 +301,7 @@ public class PictureView {
 		if (running) {
 			startImpl();
 		} else {
-			if(scanner.size() == 0) scanner.scan();
+			if (scanner.size() == 0) scanner.scan();
 			transition();
 		}
 	}
@@ -352,7 +347,7 @@ public class PictureView {
 	}
 
 	public EventHandler<MouseEvent> getMouseEventHandler() {
-		
+
 		return new EventHandler<MouseEvent>() {
 
 			private Thread singleClick;
@@ -370,20 +365,20 @@ public class PictureView {
 					handleMousePressed(event);
 				} else if (MouseEvent.MOUSE_MOVED == event.getEventType()) {
 					handleMove(event);
-				} else if(MouseEvent.MOUSE_DRAGGED == event.getEventType()) {
+				} else if (MouseEvent.MOUSE_DRAGGED == event.getEventType()) {
 					movingPictures(event);
-				} else if(MouseEvent.MOUSE_RELEASED == event.getEventType()) {
+				} else if (MouseEvent.MOUSE_RELEASED == event.getEventType()) {
 					dragX = -1;
 					posX = -1;
 					dragY = -1;
 					posY = -1;
 				}
 			}
-			
+
 			private void movingPictures(MouseEvent event) {
-				if(! event.isShortcutDown()) return;
-				
-				if(dragX == -1) {
+				if (!event.isShortcutDown()) return;
+
+				if (dragX == -1) {
 					posX = view1.getX();
 					posY = view1.getY();
 					dragX = event.getSceneX();
@@ -391,7 +386,7 @@ public class PictureView {
 				} else {
 					double x = posX + (event.getSceneX() - dragX);
 					double y = posY + (event.getSceneY() - dragY);
-					
+
 					view1.setTranslateX(x);
 					view1.setTranslateY(y);
 					view2.setTranslateX(x);
