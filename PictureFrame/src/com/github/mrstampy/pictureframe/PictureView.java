@@ -257,6 +257,9 @@ public class PictureView {
 
 		initControls();
 		vbox.setCursor(Cursor.NONE);
+		setDirectory(settings.getDirectory());
+		setDuration(settings.getDuration());
+		scanner.scan();
 	}
 
 	private void initControls() {
@@ -303,6 +306,7 @@ public class PictureView {
 		if (running) {
 			startImpl();
 		} else {
+			if(scanner.size() == 0) scanner.scan();
 			transition();
 		}
 	}
@@ -348,10 +352,15 @@ public class PictureView {
 	}
 
 	public EventHandler<MouseEvent> getMouseEventHandler() {
+		
 		return new EventHandler<MouseEvent>() {
 
 			private Thread singleClick;
 			private MouseDetectThread mouseDetectThread;
+			private double dragX = -1;
+			private double dragY = -1;
+			private double posX = -1;
+			private double posY = -1;
 
 			@Override
 			public void handle(MouseEvent event) {
@@ -361,6 +370,32 @@ public class PictureView {
 					handleMousePressed(event);
 				} else if (MouseEvent.MOUSE_MOVED == event.getEventType()) {
 					handleMove(event);
+				} else if(MouseEvent.MOUSE_DRAGGED == event.getEventType()) {
+					movingPictures(event);
+				} else if(MouseEvent.MOUSE_RELEASED == event.getEventType()) {
+					dragX = -1;
+					posX = -1;
+					dragY = -1;
+					posY = -1;
+				}
+			}
+			
+			private void movingPictures(MouseEvent event) {
+				if(! event.isShortcutDown()) return;
+				
+				if(dragX == -1) {
+					posX = view1.getX();
+					posY = view1.getY();
+					dragX = event.getSceneX();
+					dragY = event.getSceneY();
+				} else {
+					double x = posX + (event.getSceneX() - dragX);
+					double y = posY + (event.getSceneY() - dragY);
+					
+					view1.setTranslateX(x);
+					view1.setTranslateY(y);
+					view2.setTranslateX(x);
+					view2.setTranslateY(y);
 				}
 			}
 
@@ -375,7 +410,7 @@ public class PictureView {
 			}
 
 			private void handleMousePressed(MouseEvent event) {
-				if (event.isDragDetect() || isSliderEvent(event)) return;
+				if (event.isDragDetect() || isSliderEvent(event) || event.isShortcutDown()) return;
 
 				if (event.getClickCount() == 2) {
 					stopThread();
