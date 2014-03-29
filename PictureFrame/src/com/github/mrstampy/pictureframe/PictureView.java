@@ -288,7 +288,7 @@ public class PictureView {
 
 			@Override
 			public void handle(ActionEvent event) {
-				if (sliderBox.getOpacity() == 0) vbox.setCursor(Cursor.NONE);
+				if (sliderBox.getOpacity() == 0 && ! dirChooserShowing) vbox.setCursor(Cursor.NONE);
 			}
 		});
 
