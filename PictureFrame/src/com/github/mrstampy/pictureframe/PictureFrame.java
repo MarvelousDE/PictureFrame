@@ -42,7 +42,6 @@ public class PictureFrame extends Application {
 
 			@Override
 			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-				pictureView.zoom(1.0);
 				pictureView.setHeight(newValue.doubleValue());
 				settings.setHeight(newValue.doubleValue());
 			}
@@ -52,7 +51,6 @@ public class PictureFrame extends Application {
 
 			@Override
 			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-				pictureView.zoom(1.0);
 				pictureView.setWidth(newValue.doubleValue());
 				settings.setWidth(newValue.doubleValue());
 			}

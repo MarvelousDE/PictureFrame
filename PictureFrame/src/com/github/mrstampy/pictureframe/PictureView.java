@@ -301,7 +301,6 @@ public class PictureView {
 		if (running) {
 			startImpl();
 		} else {
-			if (scanner.size() == 0) scanner.scan();
 			transition();
 		}
 	}
