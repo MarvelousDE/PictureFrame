@@ -16,6 +16,7 @@ public class Settings {
 	private static final String WORK_DIR = System.getProperty("user.home") + File.separator + ".pictureframe";
 
 	private static final String PICTURE_DURATION_KEY = "picture.duration";
+	private static final String PICTURE_TRANSITION_KEY = "picture.transition";
 	private static final String PICTURE_DIR_KEY = "picture.dir";
 	private static final String FULL_SCREEN_KEY = "full.screen";
 	private static final String WIDTH_KEY = "width";
@@ -40,18 +41,20 @@ public class Settings {
 	}
 
 	public long getDuration() {
-		String ds = properties.getProperty(PICTURE_DURATION_KEY);
-
-		try {
-			return Long.parseLong(ds);
-		} catch (Exception e) {
-			setDuration(5000);
-			return 5000;
-		}
+		return getLongProperty(PICTURE_DURATION_KEY, 5000);
 	}
 
 	public void setDuration(long duration) {
 		properties.setProperty(PICTURE_DURATION_KEY, Long.toString(duration));
+		store();
+	}
+	
+	public long getTransition() {
+		return getLongProperty(PICTURE_TRANSITION_KEY, 5000);
+	}
+	
+	public void setTransition(long transition) {
+		properties.setProperty(PICTURE_TRANSITION_KEY, Long.toString(transition));
 		store();
 	}
 
@@ -105,6 +108,19 @@ public class Settings {
 
 		try {
 			return Double.parseDouble(s);
+		} catch (Exception e) {
+			properties.setProperty(key, Double.toString(dflt));
+			store();
+		}
+
+		return dflt;
+	}
+
+	private long getLongProperty(String key, long dflt) {
+		String s = properties.getProperty(key);
+
+		try {
+			return Long.parseLong(s);
 		} catch (Exception e) {
 			properties.setProperty(key, Double.toString(dflt));
 			store();

@@ -60,9 +60,11 @@ public class PictureView {
 
 	private FillTransition fillTransition;
 
-	private Slider slider = new Slider(500, 60000, 5000);
-	private Label label = new Label();
-	private VBox sliderBox = new VBox(10, label, slider);
+	private Slider durationSlider = new Slider(200, 60000, 5000);
+	private Label durationLabel = new Label();
+	private Slider transitionSlider = new Slider(200, 20000, 5000);
+	private Label transitionLabel = new Label();
+	private VBox sliderBox = new VBox(10, transitionLabel, transitionSlider, durationLabel, durationSlider);
 	private FadeTransition sliderFade = new FadeTransition(Duration.millis(SLIDER_FADE_TIME), sliderBox);
 
 	private StackPane stackPane = new StackPane(sliderBox, view2, view1);
@@ -200,9 +202,11 @@ public class PictureView {
 
 		fade1.setFromValue(view1.getOpacity());
 		fade1.setToValue(isFrom1 ? 0.0 : 1.0);
+		fade1.setDuration(Duration.millis(getTransition()));
 
 		fade2.setFromValue(view2.getOpacity());
 		fade2.setToValue(isFrom1 ? 1.0 : 0.0);
+		fade2.setDuration(Duration.millis(getTransition()));
 
 		pt.play();
 	}
@@ -258,24 +262,38 @@ public class PictureView {
 	}
 
 	private void initControls() {
-		label.setFont(Font.font(32));
-		label.setText(getFadeDuration(slider.getValue()));
+		durationLabel.setFont(Font.font(32));
+		transitionLabel.setFont(Font.font(32));
+		durationLabel.setText(getFadeDurationText(durationSlider.getValue()));
+		transitionLabel.setText(getTransitionText(transitionSlider.getValue()));
 
 		sliderBox.setOpacity(0.0);
 
-		slider.setMajorTickUnit(5000);
-		slider.setShowTickMarks(true);
-		slider.setMaxWidth(500);
-		slider.valueProperty().addListener(new ChangeListener<Number>() {
+		durationSlider.setMaxWidth(500);
+		transitionSlider.setMaxWidth(500);
+
+		durationSlider.valueProperty().addListener(new ChangeListener<Number>() {
 
 			@Override
 			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
 				setDuration(newValue.longValue());
-				label.setText(getFadeDuration(getDuration()));
+				durationLabel.setText(getFadeDurationText(getDuration()));
 				settings.setDuration(getDuration());
 			}
 		});
-		slider.setValue(settings.getDuration());
+
+		transitionSlider.valueProperty().addListener(new ChangeListener<Number>() {
+
+			@Override
+			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+				setTransition(newValue.longValue());
+				transitionLabel.setText(getTransitionText(getTransition()));
+				settings.setTransition(getTransition());
+			}
+		});
+
+		durationSlider.setValue(settings.getDuration());
+		transitionSlider.setValue(settings.getTransition());
 
 		sliderFade.setFromValue(0.0);
 		sliderFade.setToValue(1.0);
@@ -290,8 +308,16 @@ public class PictureView {
 		sliderBox.setAlignment(Pos.CENTER);
 	}
 
-	private String getFadeDuration(double millis) {
-		return new BigDecimal(millis).divide(ONE_THOUSAND, 3, RoundingMode.HALF_UP).toString() + " seconds";
+	private String getFadeDurationText(double millis) {
+		return "Duration: " + getSeconds(millis) + " seconds";
+	}
+
+	private String getTransitionText(double millis) {
+		return "Transition: " + getSeconds(millis) + " seconds";
+	}
+
+	private String getSeconds(double millis) {
+		return new BigDecimal(millis).divide(ONE_THOUSAND, 3, RoundingMode.HALF_UP).toString();
 	}
 
 	private void next() {
@@ -412,7 +438,7 @@ public class PictureView {
 			}
 
 			private void handleMousePressed(MouseEvent event) {
-				if (event.isDragDetect() || isSliderEvent(event) || event.isShortcutDown()) return;
+				if (event.isDragDetect() || isSliderEvent(event)) return;
 
 				if (event.getClickCount() == 2) {
 					stopThread();
@@ -429,6 +455,10 @@ public class PictureView {
 			}
 
 			private boolean isSliderEvent(MouseEvent event) {
+				return isSliderEvent(event, durationSlider) || isSliderEvent(event, transitionSlider);
+			}
+
+			private boolean isSliderEvent(MouseEvent event, Slider slider) {
 				Rectangle rect = new Rectangle(slider.getLayoutX(), slider.getLayoutY(), slider.getWidth(), slider.getHeight());
 				return rect.contains(event.getSceneX(), event.getSceneY());
 			}
@@ -487,7 +517,7 @@ public class PictureView {
 		}
 
 		private boolean mouseMoved() {
-			return dirChooserShowing || slider.isValueChanging()
+			return dirChooserShowing || durationSlider.isValueChanging() || transitionSlider.isValueChanging()
 					|| System.currentTimeMillis() - lastDetection < SLIDER_FADE_TIME;
 		}
 	}
