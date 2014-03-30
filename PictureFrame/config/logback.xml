@@ -3,6 +3,8 @@
 <configuration scan="true">
 
 	<consolePlugin />
+	
+	<jmxConfigurator />
 
 	<appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>

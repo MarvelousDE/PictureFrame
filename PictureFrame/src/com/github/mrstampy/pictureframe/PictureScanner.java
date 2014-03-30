@@ -1,8 +1,10 @@
 package com.github.mrstampy.pictureframe;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -45,18 +47,45 @@ public class PictureScanner {
 		lock.lock();
 		try {
 			pictureNames.clear();
-			String[] names = directory.list();
-
-			for (String name : names) {
-				if (isPictureFile(name)) {
-					log.trace("Including picture {}", name);
-					pictureNames.add(name);
-				}
-			}
+			
+			loadFromDirectory(directory);
 
 			log.debug("Loaded {} picture names", pictureNames.size());
 		} finally {
 			lock.unlock();
+		}
+	}
+	
+	private void loadFromDirectory(File dir) {
+		log.debug("Loading from {}", dir);
+		String[] names = dir.list(new FilenameFilter() {
+			
+			@Override
+			public boolean accept(File dir, String name) {
+				return isPictureFile(name);
+			}
+		});
+
+		for (String name : names) {
+			pictureNames.add(name);
+		}
+		
+		loadFromSubdirs(dir);
+	}
+
+	private void loadFromSubdirs(File dir) {
+		File[] directories = dir.listFiles(new FileFilter() {
+			
+			@Override
+			public boolean accept(File pathname) {
+				return pathname.isDirectory();
+			}
+		});
+		
+		if(directories == null || directories.length == 0) return;
+		
+		for(File f : directories) {
+			loadFromDirectory(f);
 		}
 	}
 
