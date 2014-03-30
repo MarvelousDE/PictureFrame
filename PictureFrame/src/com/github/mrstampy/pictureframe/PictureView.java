@@ -252,7 +252,7 @@ public class PictureView {
 		});
 
 		initControls();
-		vbox.setCursor(Cursor.NONE);
+		noCursor();
 		setDirectory(settings.getDirectory());
 		setDuration(settings.getDuration());
 	}
@@ -283,7 +283,7 @@ public class PictureView {
 
 			@Override
 			public void handle(ActionEvent event) {
-				if (sliderBox.getOpacity() == 0 && !dirChooserShowing) vbox.setCursor(Cursor.NONE);
+				if (sliderBox.getOpacity() == 0 && !dirChooserShowing) noCursor();
 			}
 		});
 
@@ -320,7 +320,7 @@ public class PictureView {
 
 	private void handleMove(MouseEvent event) {
 		if (sliderBox.getOpacity() == 0) {
-			vbox.setCursor(Cursor.DEFAULT);
+			defaultCursor();
 			sliderFade.stop();
 			sliderFade.setFromValue(0.0);
 			sliderFade.setToValue(1.0);
@@ -329,15 +329,23 @@ public class PictureView {
 		}
 	}
 
+	private void defaultCursor() {
+		vbox.setCursor(Cursor.DEFAULT);
+	}
+
+	private void noCursor() {
+		vbox.setCursor(Cursor.NONE);
+	}
+
 	private void showDirectoryChooser() {
 		DirectoryChooser chooser = new DirectoryChooser();
 		chooser.setTitle("Picture Directories");
 		chooser.setInitialDirectory(scanner.getDirectory());
 
 		dirChooserShowing = true;
-		vbox.setCursor(Cursor.DEFAULT);
+		defaultCursor();
 		File chosen = chooser.showDialog(PictureFrame.primaryStage);
-		vbox.setCursor(Cursor.NONE);
+		noCursor();
 		dirChooserShowing = false;
 		if (chosen != null) {
 			scanner.setDirectory(chosen);
@@ -375,7 +383,7 @@ public class PictureView {
 			}
 
 			private void movingPictures(MouseEvent event) {
-				if (!event.isShortcutDown()) return;
+				stopThread();
 
 				if (dragX == -1) {
 					posX = view1.getX();
