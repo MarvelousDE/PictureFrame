@@ -52,7 +52,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import org.slf4j.Logger;
@@ -155,6 +154,8 @@ public class PictureView {
 	}
 
 	public void setWidth(double width) {
+		view1.setFitWidth(width);
+		view2.setFitWidth(width);
 		r.setWidth(width);
 	}
 
@@ -237,19 +238,9 @@ public class PictureView {
 			Image image = scanner.getRandomImage();
 			view.setImage(image);
 			view.setOpacity(0.0);
-			
-			Stage primaryStage = PictureFrame.primaryStage;
-			double windowRatio = getRatio(primaryStage.getWidth(), primaryStage.getHeight());
-			double imageRatio = getRatio(image.getWidth(), image.getHeight());
-			
-			view.setFitWidth(imageRatio > windowRatio ? primaryStage.getWidth() : 0);
 		} catch (FileNotFoundException e) {
 			log.error("Could not load random image", e);
 		}
-	}
-	
-	private double getRatio(double w, double h) {
-		return new BigDecimal(w).divide(new BigDecimal(h), 3, RoundingMode.HALF_UP).doubleValue();
 	}
 
 	private void init() {
